@@ -38,3 +38,6 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+# homiko-system runtime (keep configs tracked)
+homiko-system/.env
