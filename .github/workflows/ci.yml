@@ -1,4 +1,5 @@
 # CI: 3 ayrı job — test → stage (otomatik) → prod (production ortamı onayı).
+# Docker imajları: linux/amd64 + linux/arm64 (Raspberry Pi 64-bit vb.)
 # Repo: Settings → Environments → "production" → Required reviewers.
 #
 # "Skipped" ne zaman normaldir?
@@ -15,6 +16,7 @@ on:
 
 env:
   IMAGE_NAME: homiko
+  DOCKER_PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
   test-and-build:
@@ -47,6 +49,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -61,6 +66,7 @@ jobs:
         with:
           context: .
           push: true
+          platforms: ${{ env.DOCKER_PLATFORMS }}
           build-args: |
             GIT_COMMIT=${{ github.sha }}
           tags: |
@@ -79,6 +85,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -93,6 +102,7 @@ jobs:
         with:
           context: .
           push: true
+          platforms: ${{ env.DOCKER_PLATFORMS }}
           build-args: |
             GIT_COMMIT=${{ github.sha }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:prod
