@@ -1,15 +1,19 @@
 package com.iko.homiko
 
+import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.Instant
 
 @RestController
 @RequestMapping("/api")
 class HelloController(
     private val environment: Environment,
 ) {
+
+    private val log = LoggerFactory.getLogger(HelloController::class.java)
 
     @GetMapping("/hello")
     fun hello(): HelloResponse = HelloResponse(
@@ -24,16 +28,18 @@ class HelloController(
         version = appVersion(),
     )
 
- @GetMapping("/version")
+    @GetMapping("/version")
     fun version(): VersionResponse {
         val appVersion = appVersion()
         val profile = environment.activeProfiles.firstOrNull() ?: "default"
+
         log.info(
             "loki_probe version_requested app=homiko version={} profile={} at={}",
             appVersion,
             profile,
             Instant.now(),
         )
+
         return VersionResponse(
             app = "homiko",
             version = appVersion,
