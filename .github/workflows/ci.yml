@@ -111,13 +111,33 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  docker-publish-prod:
+  approval-gate:
     needs: docker-publish-stage
     if: github.event_name == 'push' && github.ref_name == 'master'
     environment: production
     runs-on: ubuntu-latest
+    timeout-minutes: 1440  # 24 saat onay bekleyebilir
+    steps:
+      - name: Manual Approval Required
+        run: |
+          echo "🛑 Stage image başarıyla oluşturuldu ve Docker Hub'a yüklendi."
+          echo "📦 Image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:stage"
+          echo "🔍 Commit: ${{ github.sha }}"
+          echo ""
+          echo "⏳ Production'a promote etmek için manuel onay bekleniyor..."
+          echo "✅ GitHub → Actions → Bu workflow → 'Review deployments' butonuna tıklayın."
+
+  docker-publish-prod:
+    needs: approval-gate
+    if: github.event_name == 'push' && github.ref_name == 'master'
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Deployment approved
+        run: |
+          echo "✅ Production deployment onaylandı!"
+          echo "🚀 Stage image production'a promote ediliyor..."
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -133,3 +153,4 @@ jobs:
           docker buildx imagetools create \
             --tag "${IMAGE}:prod" \
             "${IMAGE}:stage"
+          echo "✅ Production image başarıyla oluşturuldu: ${IMAGE}:prod"
