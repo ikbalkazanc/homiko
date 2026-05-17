@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Homiko</title>
+	<style>
+		:root {
+			--bg: #0f1419;
+			--surface: #1a2332;
+			--border: #2d3a4f;
+			--text: #e7ecf3;
+			--muted: #8b9cb3;
+			--accent: #3d8bfd;
+			--accent-dim: #2563c7;
+			--success: #34d399;
+			--error: #f87171;
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			font-family: "Segoe UI", system-ui, sans-serif;
+			background: var(--bg);
+			color: var(--text);
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 1.5rem;
+		}
+
+		main {
+			width: 100%;
+			max-width: 32rem;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 2rem;
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+		}
+
+		h1 {
+			font-size: 1.75rem;
+			font-weight: 600;
+			margin-bottom: 0.25rem;
+		}
+
+		.subtitle {
+			color: var(--muted);
+			font-size: 0.9rem;
+			margin-bottom: 1.75rem;
+		}
+
+		.actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.75rem;
+			margin-bottom: 1.5rem;
+		}
+
+		button {
+			font: inherit;
+			cursor: pointer;
+			border: none;
+			border-radius: 8px;
+			padding: 0.6rem 1rem;
+			background: var(--accent);
+			color: #fff;
+			transition: background 0.15s;
+		}
+
+		button:hover {
+			background: var(--accent-dim);
+		}
+
+		button:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		button.secondary {
+			background: transparent;
+			border: 1px solid var(--border);
+			color: var(--text);
+		}
+
+		button.secondary:hover {
+			background: var(--border);
+		}
+
+		#output {
+			background: #0d1117;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 1rem;
+			font-family: "Cascadia Code", "Consolas", monospace;
+			font-size: 0.8rem;
+			line-height: 1.5;
+			min-height: 6rem;
+			white-space: pre-wrap;
+			word-break: break-word;
+			color: var(--muted);
+		}
+
+		#output.ok {
+			color: var(--success);
+		}
+
+		#output.err {
+			color: var(--error);
+		}
+
+		.hint {
+			margin-top: 1rem;
+			font-size: 0.75rem;
+			color: var(--muted);
+		}
+
+		.hint code {
+			background: #0d1117;
+			padding: 0.15rem 0.4rem;
+			border-radius: 4px;
+			font-size: 0.7rem;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Homiko</h1>
+		<p class="subtitle">Kotlin + Spring Boot test arayüzü</p>
+
+		<div class="actions">
+			<button type="button" id="btnHello">GET /api/hello</button>
+			<button type="button" id="btnInfo" class="secondary">GET /api/info</button>
+		</div>
+
+		<pre id="output">Bir endpoint seçin…</pre>
+
+		<p class="hint">
+			CLI: <code>curl http://localhost:8080/api/hello</code>
+		</p>
+	</main>
+
+	<script>
+		const output = document.getElementById("output");
+		const btnHello = document.getElementById("btnHello");
+		const btnInfo = document.getElementById("btnInfo");
+
+		async function callApi(path, button) {
+			output.className = "";
+			output.textContent = "Yükleniyor…";
+			btnHello.disabled = true;
+			btnInfo.disabled = true;
+
+			try {
+				const res = await fetch(path);
+				const body = await res.json();
+				output.className = res.ok ? "ok" : "err";
+				output.textContent = JSON.stringify(body, null, 2);
+			} catch (err) {
+				output.className = "err";
+				output.textContent = "Hata: " + err.message + "\n\nSunucu çalışıyor mu? (./gradlew bootRun)";
+			} finally {
+				btnHello.disabled = false;
+				btnInfo.disabled = false;
+			}
+		}
+
+		btnHello.addEventListener("click", () => callApi("/api/hello", btnHello));
+		btnInfo.addEventListener("click", () => callApi("/api/info", btnInfo));
+	</script>
+</body>
+</html>
