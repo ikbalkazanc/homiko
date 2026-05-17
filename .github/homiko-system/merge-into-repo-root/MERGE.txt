@@ -1,1 +1,0 @@
-Bu klasördeki dosyaları depo köküne kopyalayın (mevcut build.gradle.kts / src ile çakışanları birleştirin). Docker Compose ortam değişkenleri zaten stage/prod için farklı veritabanını JDBC URL ile seçer.
