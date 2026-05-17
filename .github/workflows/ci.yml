@@ -1,28 +1,36 @@
-# CI: test (Gradle) → Docker stage (arm64, Pi 5) → prod retag (yeniden build yok).
-# PR: yalnızca `./gradlew test` (bootJar ve Docker yok).
-# Push master: bootJar artifact + tek platform imaj (linux/arm64).
+# CI akışı:
+# - push master: test → bootJar → Docker :stage (+ :sha) — otomatik
+# - pull_request: yalnızca test
+# - workflow_dispatch "Deploy to production": :stage → :prod retag — manuel (Actions sekmesi)
 #
-# Pi 5 = ARM64. amd64 + QEMU ile çapraz derleme kaldırıldı; Docker job native arm64 runner kullanır.
-# Repo: Settings → Environments → "production" → Required reviewers.
+# Prod: Actions → CI → Run workflow → branch master → Deploy to production
+# Repo: Settings → Environments → "production" → Required reviewers (isteğe bağlı onay)
 name: CI
 
 on:
   push:
   pull_request:
     branches: [main, master, stage]
+  workflow_dispatch:
+    inputs:
+      deploy_prod:
+        description: "Promote current :stage image to :prod"
+        type: boolean
+        required: true
+        default: true
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
   IMAGE_NAME: homiko
-  # Raspberry Pi 5 (64-bit) — yalnızca arm64
   DOCKER_PLATFORMS: linux/arm64
   GRADLE_OPTS: -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
 
 jobs:
   test-and-build:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -112,8 +120,9 @@ jobs:
           cache-to: type=gha,mode=max
 
   docker-publish-prod:
-    needs: docker-publish-stage
-    if: github.event_name == 'push' && github.ref_name == 'master'
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      inputs.deploy_prod == true
     environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 5
