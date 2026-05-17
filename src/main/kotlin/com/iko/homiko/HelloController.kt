@@ -1,34 +1,53 @@
 package com.iko.homiko
 
+import org.springframework.core.env.Environment
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api")
-class HelloController {
+class HelloController(
+    private val environment: Environment,
+) {
 
-	@GetMapping("/hello")
-	fun hello(): HelloResponse = HelloResponse(
-		message = "Merhaba, Homiko çalışıyor!",
-		app = "homiko",
-	)
+    @GetMapping("/hello")
+    fun hello(): HelloResponse = HelloResponse(
+        message = "Merhaba, Homiko çalışıyor!",
+        app = "homiko",
+    )
 
-	@GetMapping("/info")
-	fun info(): InfoResponse = InfoResponse(
-		name = "Homiko",
-		description = "Kotlin + Spring Boot test uygulaması",
-		version = "0.0.1-SNAPSHOT",
-	)
+    @GetMapping("/info")
+    fun info(): InfoResponse = InfoResponse(
+        name = "Homiko",
+        description = "Kotlin + Spring Boot test uygulaması",
+        version = appVersion(),
+    )
+
+    @GetMapping("/version")
+    fun version(): VersionResponse = VersionResponse(
+        app = "homiko",
+        version = appVersion(),
+        profile = environment.activeProfiles.firstOrNull() ?: "default",
+    )
+
+    private fun appVersion(): String =
+        HelloController::class.java.`package`?.implementationVersion ?: "0.0.1-SNAPSHOT"
 }
 
 data class HelloResponse(
-	val message: String,
-	val app: String,
+    val message: String,
+    val app: String,
 )
 
 data class InfoResponse(
-	val name: String,
-	val description: String,
-	val version: String,
+    val name: String,
+    val description: String,
+    val version: String,
+)
+
+data class VersionResponse(
+    val app: String,
+    val version: String,
+    val profile: String,
 )
