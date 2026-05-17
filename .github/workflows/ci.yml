@@ -56,14 +56,16 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push (${{ env.IMAGE_NAME }}:stage)
+      - name: Build and push (${{ env.IMAGE_NAME }}:stage, :${{ github.sha }})
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           build-args: |
             GIT_COMMIT=${{ github.sha }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:stage
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:stage
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
