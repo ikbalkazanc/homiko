@@ -1,0 +1,13 @@
+﻿.git
+.gitattributes
+.gitignore
+.gradle
+build
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+HELP.md
