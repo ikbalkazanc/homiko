@@ -1,6 +1,11 @@
-# CI: 3 ayrı job — test → stage (otomatik) → prod (manuel onay).
-# Repo: Settings → Environments → production → Required reviewers.
-# Akış: docker-publish-stage yalnızca push + stage dalı; prod ondan sonra ve production ortamı onayıyla.
+# CI: 3 ayrı job — test → stage (otomatik) → prod (production ortamı onayı).
+# Repo: Settings → Environments → "production" → Required reviewers.
+#
+# "Skipped" ne zaman normaldir?
+# - pull_request: yalnızca test-and-build çalışır (Docker job'ları push ile tetiklenir).
+# - push, STAGE_BRANCH dışı bir dala yapıldıysa.
+#
+# Varsayılan staging dalı master. Ana dalınız main ise STAGE_BRANCH: main yapın.
 name: CI
 
 on:
@@ -10,6 +15,7 @@ on:
 
 env:
   IMAGE_NAME: homiko
+  STAGE_BRANCH: master
 
 jobs:
   test-and-build:
@@ -36,7 +42,7 @@ jobs:
 
   docker-publish-stage:
     needs: test-and-build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', env.STAGE_BRANCH)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -65,7 +71,7 @@ jobs:
 
   docker-publish-prod:
     needs: docker-publish-stage
-    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', env.STAGE_BRANCH)
     environment: production
     runs-on: ubuntu-latest
     steps:
