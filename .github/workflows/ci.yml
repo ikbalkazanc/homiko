@@ -5,7 +5,7 @@
 # - pull_request: yalnızca test-and-build çalışır (Docker job'ları push ile tetiklenir).
 # - push, STAGE_BRANCH dışı bir dala yapıldıysa.
 #
-# Varsayılan staging dalı master. Ana dalınız main ise STAGE_BRANCH: main yapın.
+# Varsayılan staging dalı master. Ana dalınız main ise aşağıdaki iki `if` içindeki 'master' → 'main' yapın.
 name: CI
 
 on:
@@ -15,7 +15,6 @@ on:
 
 env:
   IMAGE_NAME: homiko
-  STAGE_BRANCH: master
 
 jobs:
   test-and-build:
@@ -42,7 +41,7 @@ jobs:
 
   docker-publish-stage:
     needs: test-and-build
-    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', env.STAGE_BRANCH)
+    if: github.event_name == 'push' && github.ref_name == 'master'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -70,8 +69,8 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
   docker-publish-prod:
-    needs: docker-publish-stage
-    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', env.STAGE_BRANCH)
+    needs: test-and-build
+    if: github.event_name == 'push' && github.ref_name == 'master'
     environment: production
     runs-on: ubuntu-latest
     steps:
