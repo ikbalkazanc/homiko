@@ -24,12 +24,22 @@ class HelloController(
         version = appVersion(),
     )
 
-    @GetMapping("/version")
-    fun version(): VersionResponse = VersionResponse(
-        app = "homiko",
-        version = appVersion(),
-        profile = environment.activeProfiles.firstOrNull() ?: "default",
-    )
+ @GetMapping("/version")
+    fun version(): VersionResponse {
+        val appVersion = appVersion()
+        val profile = environment.activeProfiles.firstOrNull() ?: "default"
+        log.info(
+            "loki_probe version_requested app=homiko version={} profile={} at={}",
+            appVersion,
+            profile,
+            Instant.now(),
+        )
+        return VersionResponse(
+            app = "homiko",
+            version = appVersion,
+            profile = profile,
+        )
+    }
 
     private fun appVersion(): String =
         HelloController::class.java.`package`?.implementationVersion ?: "0.0.1-SNAPSHOT"
